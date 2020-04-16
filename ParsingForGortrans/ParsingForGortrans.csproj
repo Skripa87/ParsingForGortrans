@@ -103,7 +103,7 @@
       <SubType>Designer</SubType>
     </ApplicationDefinition>
     <Compile Include="CheckPoint.cs" />
-    <Compile Include="CircleRoute.cs" />
+    <Compile Include="Flight.cs" />
     <Compile Include="Crew.cs" />
     <Compile Include="ManagerReport.cs" />
     <Compile Include="Pair.cs" />

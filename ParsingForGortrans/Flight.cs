@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace ParsingForGortrans
 {
-    public class CircleRoute
+    public class Flight
     {
         public List<CheckPoint> CheckPoints { get; set; }
         public int Number { get; set; }
