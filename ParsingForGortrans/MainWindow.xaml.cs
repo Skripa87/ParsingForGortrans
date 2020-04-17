@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows;
 
 namespace ParsingForGortrans
@@ -9,7 +10,7 @@ namespace ParsingForGortrans
     /// </summary>
     public partial class MainWindow
     {
-        private string _fileNameExcel;
+        private List<string> _fileNameExcel;
 
         public MainWindow()
         {
@@ -19,7 +20,7 @@ namespace ParsingForGortrans
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (string.IsNullOrEmpty(_fileNameExcel))
+            if (!_fileNameExcel.Any())
                 return;
             var reportManager = new ManagerReport(_fileNameExcel);
             reportManager.GetReport();
@@ -31,12 +32,13 @@ namespace ParsingForGortrans
             dlg.FileName = "Document";
             dlg.DefaultExt = ".xlsx";
             dlg.Filter = "Text documents (.xlsx)|*.xlsx";
-
+            dlg.Multiselect = true;
             Nullable<bool> result = dlg.ShowDialog();
 
             if (result == true)
             {
-                _fileNameExcel = dlg.FileName;
+                _fileNameExcel = dlg.FileNames
+                                    .ToList();
                 SelectedFile.Content = _fileNameExcel;
             }
         }

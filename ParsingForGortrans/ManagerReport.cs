@@ -10,18 +10,18 @@ namespace ParsingForGortrans
 {
     public class ManagerReport
     {
-        public ManagerReport(string fileName)
+        public ManagerReport(List<string> fileNames)
         {
-            FileName = fileName;            
+            FileNames = fileNames;            
         }
 
-        private string FileName { get; set; }        
+        private List<string> FileNames { get; set; }        
 
-        private Dictionary<string, List<List<string>>> ReadExcelPage() 
+        private Dictionary<string, List<List<string>>> ReadExcelPage(string fileName) 
         {
-            string fileNameExcel = FileName;
-            bool mark = false;
-            bool emptyMark = false;
+            var fileNameExcel = fileName;
+            var mark = false;
+            var emptyMark = false;
             var failInfo = new FileInfo(fileNameExcel);
             var dataList = new Dictionary<string,List<List<string>>>();
             using (var package = new ExcelPackage(failInfo))
@@ -104,11 +104,13 @@ namespace ParsingForGortrans
         private static List<Pair> GetPairsForCrew(List<List<string>> data) 
         {
             var pairs = new List<Pair>();
+            var flights = GetFlights(GetCheckPoints(data));
             var activeData = data.GetRange(2, data.IndexOf(
                                               data.FirstOrDefault(f => f.All(a => string.IsNullOrEmpty(a)))) - 2);
             foreach (var item in activeData)
             {
                 var pair = new Pair(item);
+                pair.SetFligths(flights.FindAll(f=>f.CheckPoints.All(c=>c.Time <= pair.EndWorkTime)));
                 pairs.Add(pair);
             }
             return pairs;
@@ -129,34 +131,64 @@ namespace ParsingForGortrans
                     checkPoints.Add(checkPoint);
                 }
             }
+            checkPoints.RemoveAll(c =>
+                c.PitStopTimeEnd == TimeSpan.Zero && c.PitStopTimeStart == TimeSpan.Zero && c.Time == TimeSpan.Zero);
             checkPoints.Sort();
             return checkPoints;
+        }
+
+        private static List<Flight> GetFlights(List<CheckPoint> checkPoints)
+        {
+            var flights = new List<Flight>();
+            var number = 1;
+            List<CheckPoint> flightPoints = null;
+            foreach (var item in checkPoints)
+            {
+                if (flightPoints == null || flightPoints.Select(s => s.Name
+                            .Trim()
+                            .ToUpperInvariant())
+                        .Contains(item.Name
+                            .Trim()
+                            .ToUpperInvariant()))
+                {
+                    if (flightPoints != null)
+                    {
+                        var flight = new Flight(number);
+                        flight.InitCheckPoints(flightPoints);
+                        flights.Add(flight);
+                    }
+                    flightPoints = new List<CheckPoint>();
+                }
+                flightPoints.Add(item);
+            }
+            return flights;
         }
 
         private List<RouteSheet> GetRouteSheets()
         {
             var routeSheets = new List<RouteSheet>();
-            var massivData = ReadExcelPage();
-            var prototype = massivData?.FirstOrDefault()
-                                       .Value;
-            var routeSheet = SeparateStartData(prototype);
-            var crews = new List<Crew>();
-            var poinpoint = new List<List<CheckPoint>>();
-            foreach(var list in massivData)
+            foreach (var fileName in FileNames)
             {
-                var crew = new Crew(int.TryParse(list.Key, out var number)
-                                    ? (crews.Any(c => c.Number == number)
-                                       ? crews.Select(s => s.Number).Max() + 1
-                                       : number)
-                                    : 999);
-                crew.SetListPair(GetPairsForCrew(list.Value));
-                crews.Add(crew);
-                var checkPoints = GetCheckPoints(list.Value);
-                poinpoint.Add(checkPoints);
+
+
+                var massivData = ReadExcelPage(fileName);
+                var prototype = massivData?.FirstOrDefault()
+                    .Value;
+                var routeSheet = SeparateStartData(prototype);
+                var crews = new List<Crew>();
+                foreach (var list in massivData)
+                {
+                    var crew = new Crew(int.TryParse(list.Key, out var number)
+                        ? (crews.Any(c => c.Number == number)
+                            ? crews.Select(s => s.Number).Max() + 1
+                            : number)
+                        : 999);
+                    crew.SetListPair(GetPairsForCrew(list.Value));
+                    crews.Add(crew);
+                }
+                routeSheet.InitCrews(crews);
+                routeSheets.Add(routeSheet);
             }
-            routeSheet.InitCrews(crews);
-            var x = poinpoint;
-            routeSheets.Add(routeSheet);
             return routeSheets;
         }
 
