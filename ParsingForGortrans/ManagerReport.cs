@@ -5,6 +5,7 @@ using System.IO;
 using System.Windows.Controls;
 using OfficeOpenXml;
 using ClosedXML.Excel;
+using DocumentFormat.OpenXml.Bibliography;
 
 namespace ParsingForGortrans
 {
@@ -110,17 +111,33 @@ namespace ParsingForGortrans
             foreach (var item in activeData)
             {
                 var pair = new Pair(item);
-                pair.SetFligths(flights.FindAll(f=>f.CheckPoints.All(c=>c.Time <= pair.EndWorkTime)));
+                pair.SetFligths(flights.FindAll(f=>f.CheckPoints.All(c=>c.Time <= pair.EndWorkTime && c.Time >= pair.StartWorkTime)));
                 pairs.Add(pair);
             }
             return pairs;
+        }
+        
+        private static List<List<string>> DistinctData(List<List<string>> data)
+        {
+            var result = new List<List<string>>();
+            result.Add(data.FirstOrDefault());
+            data.Remove(data.FirstOrDefault());
+            foreach (var item in data)
+            {
+                if (!result.Any(r => r.All(a => item.IndexOf(a) != -1)))
+                {
+                    result.Add(item);
+                }
+            }
+            return result;
         }
 
         private static List<CheckPoint> GetCheckPoints(List<List<string>> data) 
         {
             var checkPoints = new List<CheckPoint>();
             var startPoint = data.IndexOf(data.FirstOrDefault(f => f.All(a => string.IsNullOrEmpty(a))));
-            var activeData = data.GetRange(startPoint+2,data.Count - (2+startPoint+2));
+            var activePreData = data.GetRange(startPoint+2,data.Count - (2+startPoint+2));
+            var activeData = DistinctData(activePreData);
             foreach (var item in activeData)
             {
                 var name = item?.FirstOrDefault();
@@ -133,6 +150,20 @@ namespace ParsingForGortrans
             }
             checkPoints.RemoveAll(c =>
                 c.PitStopTimeEnd == TimeSpan.Zero && c.PitStopTimeStart == TimeSpan.Zero && c.Time == TimeSpan.Zero);
+            var endPoints = checkPoints.FindAll(c => c.IsEndpoint)
+                                       .Select(s => s.Name
+                                                     .Trim(' ')
+                                                     .ToUpperInvariant())
+                                       .Distinct();
+            foreach (var point in checkPoints)
+            {
+                if (endPoints.Contains(point.Name
+                             .Trim(' ')
+                             .ToUpperInvariant()))
+                {
+                    point.IsEndpoint = true;
+                }
+            }
             checkPoints.Sort();
             return checkPoints;
         }
@@ -144,20 +175,26 @@ namespace ParsingForGortrans
             List<CheckPoint> flightPoints = null;
             foreach (var item in checkPoints)
             {
-                if (flightPoints == null || flightPoints.Select(s => s.Name
-                            .Trim()
-                            .ToUpperInvariant())
-                        .Contains(item.Name
-                            .Trim()
-                            .ToUpperInvariant()))
+                if (item.IsEndpoint || flightPoints == null 
+                        //            || flightPoints.Select(s => s.Name
+                        //    .Trim()
+                        //    .ToUpperInvariant())
+                        //.Contains(item.Name
+                        //    .Trim()
+                        //    .ToUpperInvariant())
+                                    )
                 {
+                    //CheckPoint last = null;
                     if (flightPoints != null)
                     {
+                        flightPoints.Add(item);
                         var flight = new Flight(number);
                         flight.InitCheckPoints(flightPoints);
+                        //last = flightPoints.LastOrDefault(); 
                         flights.Add(flight);
                     }
                     flightPoints = new List<CheckPoint>();
+                    //if(last!=null)flightPoints.Add(last);
                 }
                 flightPoints.Add(item);
             }
@@ -169,8 +206,6 @@ namespace ParsingForGortrans
             var routeSheets = new List<RouteSheet>();
             foreach (var fileName in FileNames)
             {
-
-
                 var massivData = ReadExcelPage(fileName);
                 var prototype = massivData?.FirstOrDefault()
                     .Value;
