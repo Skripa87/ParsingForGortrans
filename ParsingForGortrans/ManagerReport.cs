@@ -111,7 +111,8 @@ namespace ParsingForGortrans
             foreach (var item in activeData)
             {
                 var pair = new Pair(item);
-                pair.SetFligths(flights.FindAll(f=>f.CheckPoints.All(c=>c.Time <= pair.EndWorkTime && c.Time >= pair.StartWorkTime)));
+                pair.SetFligths(flights.FindAll(f=>f.CheckPoints.All(c=>(c.Time <= pair.EndWorkTime && c.Time >= pair.StartWorkTime) 
+                                                                     || (c.IsEndpoint && c.PitStopTimeStart <= pair.EndWorkTime && c.PitStopTimeStart >= pair.StartWorkTime))));
                 pairs.Add(pair);
             }
             return pairs;
@@ -136,7 +137,7 @@ namespace ParsingForGortrans
         {
             var checkPoints = new List<CheckPoint>();
             var startPoint = data.IndexOf(data.FirstOrDefault(f => f.All(a => string.IsNullOrEmpty(a))));
-            var activePreData = data.GetRange(startPoint+2,data.Count - (2+startPoint+2));
+            var activePreData = data.GetRange(startPoint+2,data.Count - (2+startPoint+1));
             var activeData = DistinctData(activePreData);
             foreach (var item in activeData)
             {
@@ -150,16 +151,19 @@ namespace ParsingForGortrans
             }
             checkPoints.RemoveAll(c =>
                 c.PitStopTimeEnd == TimeSpan.Zero && c.PitStopTimeStart == TimeSpan.Zero && c.Time == TimeSpan.Zero);
-            var endPoints = checkPoints.FindAll(c => c.IsEndpoint)
-                                       .Select(s => s.Name
+            var endPoints = checkPoints.FindAll(c => c.IsEndpoint);
+            var endPointNames = endPoints.Select(s => s.Name
                                                      .Trim(' ')
                                                      .ToUpperInvariant())
-                                       .Distinct();
+                                         .Distinct();
+            var endPointTimes = endPoints.Select(s => s.PitStopTimeStart)
+                                         .Distinct();
+            checkPoints.RemoveAll(c => endPointTimes.Contains(c.Time));
             foreach (var point in checkPoints)
             {
-                if (endPoints.Contains(point.Name
-                             .Trim(' ')
-                             .ToUpperInvariant()))
+                if (endPointNames.Contains(point.Name
+                                 .Trim(' ')
+                                 .ToUpperInvariant()))
                 {
                     point.IsEndpoint = true;
                 }
@@ -175,26 +179,16 @@ namespace ParsingForGortrans
             List<CheckPoint> flightPoints = null;
             foreach (var item in checkPoints)
             {
-                if (item.IsEndpoint || flightPoints == null 
-                        //            || flightPoints.Select(s => s.Name
-                        //    .Trim()
-                        //    .ToUpperInvariant())
-                        //.Contains(item.Name
-                        //    .Trim()
-                        //    .ToUpperInvariant())
-                                    )
+                if (item.IsEndpoint || flightPoints == null)
                 {
-                    //CheckPoint last = null;
                     if (flightPoints != null)
                     {
                         flightPoints.Add(item);
                         var flight = new Flight(number);
                         flight.InitCheckPoints(flightPoints);
-                        //last = flightPoints.LastOrDefault(); 
                         flights.Add(flight);
                     }
                     flightPoints = new List<CheckPoint>();
-                    //if(last!=null)flightPoints.Add(last);
                 }
                 flightPoints.Add(item);
             }
