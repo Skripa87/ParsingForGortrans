@@ -10,7 +10,8 @@ namespace ParsingForGortrans
     /// </summary>
     public partial class MainWindow
     {
-        private List<string> _fileNameExcel;
+        private List<string> _fileNamesExcel;
+        private List<string> _fileNamesExcelWeekend;
 
         public MainWindow()
         {
@@ -20,9 +21,9 @@ namespace ParsingForGortrans
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            if (!_fileNameExcel.Any())
+            if (!_fileNamesExcel.Any())
                 return;
-            var reportManager = new ManagerReport(_fileNameExcel);
+            var reportManager = new ManagerReport(_fileNamesExcel, _fileNamesExcelWeekend);
             reportManager.GetReport();
         }
 
@@ -37,11 +38,29 @@ namespace ParsingForGortrans
 
             if (result == true)
             {
-                _fileNameExcel = dlg.FileNames
+                _fileNamesExcel = dlg.FileNames
                                     .ToList();
-                SelectedFile.Content = _fileNameExcel;
+                SelectedFile.Content = _fileNamesExcel;
             }
         }
+
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.FileName = "Document";
+            dlg.DefaultExt = ".xlsx";
+            dlg.Filter = "Text documents (.xlsx)|*.xlsx";
+            dlg.Multiselect = true;
+            Nullable<bool> result = dlg.ShowDialog();
+
+            if (result == true)
+            {
+                _fileNamesExcelWeekend = dlg.FileNames
+                    .ToList();
+                SelectedFile.Content = _fileNamesExcelWeekend;
+            }
+        }
+
         private void ProgressBar_ValueChanged(object sender, RoutedPropertyChangedEventArgs<double> e)
         {
 

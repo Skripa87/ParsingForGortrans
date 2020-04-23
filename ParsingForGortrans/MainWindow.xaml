@@ -4,8 +4,8 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
-        Title="Программулька" Height="98.872" Width="398.693">
-    <Grid Margin="0,0,2,10">
+        Title="Программулька" Height="139.178" Width="398.693">
+    <Grid Margin="0,0,2,4">
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="98*"/>
             <ColumnDefinition Width="97*"/>
@@ -15,12 +15,17 @@
                 <DropShadowEffect/>
             </Button.Effect>
         </Button>
-        <Button Content="Выбрать файл" HorizontalAlignment="Left" Margin="50,21,0,0" VerticalAlignment="Top" Width="134" Click="Button_Click_1" Height="23" RenderTransformOrigin="0.5,0.5" Cursor="Hand" Grid.Column="1">
+        <Button Content="Выбрать файлы будн." HorizontalAlignment="Left" Margin="50,21,0,0" VerticalAlignment="Top" Width="134" Click="Button_Click_1" Height="23" RenderTransformOrigin="0.5,0.5" Cursor="Hand" Grid.Column="1">
             <Button.Effect>
                 <DropShadowEffect/>
             </Button.Effect>
         </Button>
         <Label Name="SelectedFile" Content="" Grid.Column="1" HorizontalAlignment="Left" Margin="50,262,0,0" VerticalAlignment="Top" Width="134" Height="27"/>
+        <Button Content="Выбрать файлы вых." HorizontalAlignment="Left" Margin="50,64,0,0" VerticalAlignment="Top" Width="134" Click="Button_Click_2" Height="23" RenderTransformOrigin="0.5,0.5" Cursor="Hand" Grid.Column="1">
+            <Button.Effect>
+                <DropShadowEffect/>
+            </Button.Effect>
+        </Button>
         <!--<TextBox Name="fileName" HorizontalAlignment="Left" Height="23" Margin="223,20,0,0" TextWrapping="Wrap" Text="" VerticalAlignment="Top" Width="150"/>-->
 
     </Grid>
