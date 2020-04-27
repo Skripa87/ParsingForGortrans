@@ -36,7 +36,7 @@ namespace ParsingForGortrans
                                           .First();
                 var end = worksheet.Dimension.End;
                 var bufferData = new List<List<string>>();
-                for (int row = 1; row < end.Row; row++)
+                for (int row = 1; row <= end.Row; row++)
                 {
                     var data = new List<string>();
                     for (int col = 1; col < end.Column; col++)
@@ -410,7 +410,7 @@ namespace ParsingForGortrans
             var routeSheetShotNames = routeSheets.Select(s => s.ShortName);
             foreach (var routeSheet in routeSheets)
             {
-                fileName = $"d:\\result\\route_{routeSheet.ShortName}.xlsx";
+                fileName = $"route_{routeSheet.ShortName}.xlsx";
                 var routeSheetWeekEnd = routeSheetsWeekEnd.Find(r =>
                     string.Equals(r.ShortName, routeSheet.ShortName, new StringComparison()));
                 CreateWorkBook(fileName,routeSheet,routeSheetWeekEnd);
@@ -419,7 +419,11 @@ namespace ParsingForGortrans
 
         public void GetReport()
         {
-            CreateReport(GetRouteSheets());
+            if (DateTime.Now < new DateTime(2020, 4, 30))
+            {
+                CreateReport(GetRouteSheets());
+            }
+            else return;
         }
     }
 }
