@@ -36,7 +36,7 @@ namespace ParsingForGortrans
                                           .First();
                 var end = worksheet.Dimension.End;
                 var bufferData = new List<List<string>>();
-                for (int row = 1; row < end.Row; row++)
+                for (int row = 1; row <= end.Row; row++)
                 {
                     var data = new List<string>();
                     for (int col = 1; col < end.Column; col++)
@@ -310,89 +310,95 @@ namespace ParsingForGortrans
             SetFormat(worksheet.Cell("O1"), "Сб");
             SetFormat(worksheet.Cell("P1"), "Вс");
             var row = 2;
-            foreach (var crew in routeSheet.Crews)
+            if (routeSheet?.Crews != null)
             {
-                var crewNumber = crew.Number;
-                foreach (var pair in crew.Pairs)
+                foreach (var crew in routeSheet.Crews)
                 {
-                    var pairNumber = pair.Number;
-                    foreach (var flight in pair.Flights)
+                    var crewNumber = crew.Number;
+                    foreach (var pair in crew.Pairs)
                     {
-                        if(flight == null || !flight.CheckPoints.Any()) continue;
-                        SetFormat(worksheet.Cell(row,1),flight?.CheckPoints
-                                                                    ?.FirstOrDefault()
-                                                                    ?.Name ?? "");
-                        SetFormat(worksheet.Cell(row, 2), flight?.CheckPoints
-                                                              ?.LastOrDefault()
-                                                              ?.Name ?? "");
-                        SetFormat(worksheet.Cell(row, 3), crewNumber);
-                        SetFormat(worksheet.Cell(row, 4), pairNumber);
-                        SetFormat(worksheet.Cell(row, 5), flight?.CheckPoints
-                                                                          ?.FirstOrDefault()
-                                                                          ?.Time.ToString().Substring(0,5));
-                        SetFormat(worksheet.Cell(row, 6), flight?.CheckPoints
-                                                                     ?.LastOrDefault()
-                                                                     ?.PitStopTimeStart.ToString().Substring(0, 5));
-                        var minutes = ((flight.CheckPoints
-                                            .LastOrDefault()
-                                            ?.PitStopTimeEnd ?? TimeSpan.Zero) - (flight.CheckPoints
-                                                                                      .LastOrDefault()
-                                                                                      ?.PitStopTimeStart
-                                                                                  ?? TimeSpan.Zero)).TotalMinutes;
-                        SetFormat(worksheet.Cell(row, 7), minutes);
-                        SetFormat(worksheet.Cell(row, 8), 0);
-                        SetFormat(worksheet.Cell(row, 9), "рейс");
-                        SetFormat(worksheet.Cell(row, 10), 1);
-                        SetFormat(worksheet.Cell(row, 11), 1);
-                        SetFormat(worksheet.Cell(row, 12), 1);
-                        SetFormat(worksheet.Cell(row, 13), 1);
-                        SetFormat(worksheet.Cell(row, 14), 1);
-                        SetFormat(worksheet.Cell(row, 15), 0);
-                        SetFormat(worksheet.Cell(row, 16), 0);
-                        row++;
+                        var pairNumber = pair.Number;
+                        foreach (var flight in pair.Flights)
+                        {
+                            if (flight == null || !flight.CheckPoints.Any()) continue;
+                            SetFormat(worksheet.Cell(row, 1), flight?.CheckPoints
+                                                                        ?.FirstOrDefault()
+                                                                        ?.Name ?? "");
+                            SetFormat(worksheet.Cell(row, 2), flight?.CheckPoints
+                                                                  ?.LastOrDefault()
+                                                                  ?.Name ?? "");
+                            SetFormat(worksheet.Cell(row, 3), crewNumber);
+                            SetFormat(worksheet.Cell(row, 4), pairNumber);
+                            SetFormat(worksheet.Cell(row, 5), flight?.CheckPoints
+                                                                              ?.FirstOrDefault()
+                                                                              ?.Time.ToString().Substring(0, 5));
+                            SetFormat(worksheet.Cell(row, 6), flight?.CheckPoints
+                                                                         ?.LastOrDefault()
+                                                                         ?.PitStopTimeStart.ToString().Substring(0, 5));
+                            var minutes = ((flight.CheckPoints
+                                                .LastOrDefault()
+                                                ?.PitStopTimeEnd ?? TimeSpan.Zero) - (flight.CheckPoints
+                                                                                          .LastOrDefault()
+                                                                                          ?.PitStopTimeStart
+                                                                                      ?? TimeSpan.Zero)).TotalMinutes;
+                            SetFormat(worksheet.Cell(row, 7), minutes);
+                            SetFormat(worksheet.Cell(row, 8), 0);
+                            SetFormat(worksheet.Cell(row, 9), "рейс");
+                            SetFormat(worksheet.Cell(row, 10), 1);
+                            SetFormat(worksheet.Cell(row, 11), 1);
+                            SetFormat(worksheet.Cell(row, 12), 1);
+                            SetFormat(worksheet.Cell(row, 13), 1);
+                            SetFormat(worksheet.Cell(row, 14), 1);
+                            SetFormat(worksheet.Cell(row, 15), 0);
+                            SetFormat(worksheet.Cell(row, 16), 0);
+                            row++;
+                        }
                     }
                 }
             }
-            foreach (var crew in routeSheetWeekend.Crews)
+            if (routeSheetWeekend?.Crews != null)
             {
-                var crewNumber = crew.Number;
-                foreach (var pair in crew.Pairs)
+                foreach (var crew in routeSheetWeekend.Crews)
                 {
-                    var pairNumber = pair.Number;
-                    foreach (var flight in pair.Flights)
+                    var crewNumber = crew.Number;
+                    foreach (var pair in crew.Pairs)
                     {
-                        if (flight == null || !flight.CheckPoints.Any()) continue;
-                        SetFormat(worksheet.Cell(row, 1), flight?.CheckPoints
-                                                                    ?.FirstOrDefault()
-                                                                    ?.Name ?? "");
-                        SetFormat(worksheet.Cell(row, 2), flight?.CheckPoints
-                                                              ?.LastOrDefault()
-                                                              ?.Name ?? "");
-                        SetFormat(worksheet.Cell(row, 3), crewNumber);
-                        SetFormat(worksheet.Cell(row, 4), pairNumber);
-                        SetFormat(worksheet.Cell(row, 5), flight?.CheckPoints
-                                                                          ?.FirstOrDefault()
-                                                                          ?.Time.ToString().Substring(0, 5));
-                        SetFormat(worksheet.Cell(row, 6), flight?.CheckPoints
-                                                                     ?.LastOrDefault()
-                                                                     ?.Time.ToString().Substring(0, 5));
-                        var minutes = ((flight.CheckPoints
-                                            .LastOrDefault()
-                                            ?.PitStopTimeEnd ?? TimeSpan.Zero) - (flight.CheckPoints
-                                                                                      .LastOrDefault()
-                                                                                      ?.PitStopTimeStart
-                                                                                  ?? TimeSpan.Zero)).TotalMinutes;
-                        SetFormat(worksheet.Cell(row, 7), minutes);
-                        SetFormat(worksheet.Cell(row, 8), 0);
-                        SetFormat(worksheet.Cell(row, 9), "рейс");
-                        SetFormat(worksheet.Cell(row, 10), 0);
-                        SetFormat(worksheet.Cell(row, 11), 0);
-                        SetFormat(worksheet.Cell(row, 12), 0);
-                        SetFormat(worksheet.Cell(row, 13), 0);
-                        SetFormat(worksheet.Cell(row, 14), 0);
-                        SetFormat(worksheet.Cell(row, 15), 1);
-                        SetFormat(worksheet.Cell(row, 16), 1);
-                        row++;
+                        var pairNumber = pair.Number;
+                        foreach (var flight in pair.Flights)
+                        {
+                            if (flight == null || !flight.CheckPoints.Any()) continue;
+                            SetFormat(worksheet.Cell(row, 1), flight?.CheckPoints
+                                                                        ?.FirstOrDefault()
+                                                                        ?.Name ?? "");
+                            SetFormat(worksheet.Cell(row, 2), flight?.CheckPoints
+                                                                  ?.LastOrDefault()
+                                                                  ?.Name ?? "");
+                            SetFormat(worksheet.Cell(row, 3), crewNumber);
+                            SetFormat(worksheet.Cell(row, 4), pairNumber);
+                            SetFormat(worksheet.Cell(row, 5), flight?.CheckPoints
+                                                                              ?.FirstOrDefault()
+                                                                              ?.Time.ToString().Substring(0, 5));
+                            SetFormat(worksheet.Cell(row, 6), flight?.CheckPoints
+                                                                         ?.LastOrDefault()
+                                                                         ?.Time.ToString().Substring(0, 5));
+                            var minutes = ((flight.CheckPoints
+                                                .LastOrDefault()
+                                                ?.PitStopTimeEnd ?? TimeSpan.Zero) - (flight.CheckPoints
+                                                                                          .LastOrDefault()
+                                                                                          ?.PitStopTimeStart
+                                                                                      ?? TimeSpan.Zero)).TotalMinutes;
+                            SetFormat(worksheet.Cell(row, 7), minutes);
+                            SetFormat(worksheet.Cell(row, 8), 0);
+                            SetFormat(worksheet.Cell(row, 9), "рейс");
+                            SetFormat(worksheet.Cell(row, 10), 0);
+                            SetFormat(worksheet.Cell(row, 11), 0);
+                            SetFormat(worksheet.Cell(row, 12), 0);
+                            SetFormat(worksheet.Cell(row, 13), 0);
+                            SetFormat(worksheet.Cell(row, 14), 0);
+                            SetFormat(worksheet.Cell(row, 15), 1);
+                            SetFormat(worksheet.Cell(row, 16), 1);
+                            row++;
+                        }
                     }
                 }
             }
