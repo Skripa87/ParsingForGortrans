@@ -29,6 +29,7 @@ namespace ParsingForGortrans
             var emptyMark = false;
             var failInfo = new FileInfo(fileNameExcel);
             var dataList = new Dictionary<string,List<List<string>>>();
+            ExcelPackage.LicenseContext = LicenseContext.NonCommercial;
             using (var package = new ExcelPackage(failInfo))
             {
                 var epWorkbook = package.Workbook;
@@ -36,6 +37,7 @@ namespace ParsingForGortrans
                                           .First();
                 var end = worksheet.Dimension.End;
                 var bufferData = new List<List<string>>();
+                string key = "";
                 for (int row = 1; row <= end.Row; row++)
                 {
                     var data = new List<string>();
@@ -61,7 +63,7 @@ namespace ParsingForGortrans
                     }
                     if(mark && emptyMark)
                     {
-                        string key = "-999";
+                        key = "-999";
                         try
                         {
                             key = bufferData.FirstOrDefault()
@@ -85,6 +87,10 @@ namespace ParsingForGortrans
                         bufferData.Add(data);
                     }
                 }
+                key = bufferData.FirstOrDefault()
+                                           ?.FirstOrDefault()
+                                           ?.Split(' ')[2];
+                dataList.Add(key, bufferData);
             }
             return dataList;
         }

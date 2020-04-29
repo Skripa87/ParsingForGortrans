@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace ParsingForGortrans
 {
@@ -54,10 +51,13 @@ namespace ParsingForGortrans
 
         public int CompareTo(object obj)
         {
-            return ((CheckPoint)obj).Time > Time
-                ? -1
-                : (((CheckPoint)obj).Time < Time
-                  ? 1 : 0);
+            return obj == null 
+                  ? 1 
+                  : (((CheckPoint)obj).Time > Time
+                     ? -1
+                     : (((CheckPoint)obj).Time < Time
+                        ? 1 
+                        : 0));
         }
     }
 }
