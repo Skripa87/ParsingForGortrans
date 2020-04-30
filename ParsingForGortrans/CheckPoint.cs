@@ -59,5 +59,49 @@ namespace ParsingForGortrans
                         ? 1 
                         : 0));
         }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null) return false;
+            return ((CheckPoint)obj).IsEndpoint == IsEndpoint
+                && string.Equals(((CheckPoint)obj).Name.ToUpperInvariant(), Name.ToUpperInvariant(), new StringComparison())
+                && ((CheckPoint)obj).Time == Time
+                && ((CheckPoint)obj).PitStopTimeEnd == PitStopTimeEnd
+                && ((CheckPoint)obj).PitStopTimeStart == PitStopTimeStart;
+        }        
+
+        public static bool operator ==(CheckPoint left, CheckPoint right)
+        {
+            if (ReferenceEquals(left, null))
+            {
+                return ReferenceEquals(right, null);
+            }
+            return left.Equals(right);
+        }
+
+        public static bool operator !=(CheckPoint left, CheckPoint right)
+        {
+            return !(left == right);
+        }
+
+        public static bool operator <(CheckPoint left, CheckPoint right)
+        {
+            return ReferenceEquals(left, null) ? !ReferenceEquals(right, null) : left.CompareTo(right) < 0;
+        }
+
+        public static bool operator <=(CheckPoint left, CheckPoint right)
+        {
+            return ReferenceEquals(left, null) || left.CompareTo(right) <= 0;
+        }
+
+        public static bool operator >(CheckPoint left, CheckPoint right)
+        {
+            return !ReferenceEquals(left, null) && left.CompareTo(right) > 0;
+        }
+
+        public static bool operator >=(CheckPoint left, CheckPoint right)
+        {
+            return ReferenceEquals(left, null) ? ReferenceEquals(right, null) : left.CompareTo(right) >= 0;
+        }
     }
 }
