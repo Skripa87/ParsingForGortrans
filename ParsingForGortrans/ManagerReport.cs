@@ -172,7 +172,7 @@ namespace ParsingForGortrans
                 var name = item?.FirstOrDefault();
                 var list = item.GetRange(1, item.Count - 1);
                 list.RemoveAll(string.IsNullOrWhiteSpace);
-                if (list.Any(a => a.Contains("\n")))
+                if (list.Any(a => a.Contains("\n")) || (activeData.IndexOf(item) == activeData.Count - 1))
                 {
                     for (var i =0; i < list.Count; i++)
                     {
@@ -186,8 +186,6 @@ namespace ParsingForGortrans
                     checkPoints.Add(checkPoint);
                 }
             }
-            //checkPoints.RemoveAll(c =>
-            //    c.PitStopTimeEnd == TimeSpan.Zero && c.PitStopTimeStart == TimeSpan.Zero && c.Time == TimeSpan.Zero);
             checkPoints.Sort();
             var endPoints = checkPoints.FindAll(c => c.IsEndpoint);
             var endPointNames = endPoints.Select(s => s.Name
@@ -201,10 +199,6 @@ namespace ParsingForGortrans
             var endPointTimes = endPoints.Select(s => s.Time)
                                          .Distinct();
             var endPointComposit = CompositCheckPoint(checkPoints);
-            //checkPoints.RemoveAll(c => endPointNames.Contains(c.Name.Trim(' ').ToUpperInvariant()) && !c.IsEndpoint &&
-            //                          (endPointTimesStart.Any(e => (e - c.Time).TotalMinutes <= 10)
-            //                          || endPointTimesEnd.Any(e => (e - c.Time).TotalMinutes <= 10)
-            //                          || endPointTimes.Any(e => (e - c.Time).TotalMinutes <= 10)));                                                                       
             for(var i=0; i< checkPoints.Count; i++)
             { 
                 if (endPointNames.Contains(checkPoints[i].Name
