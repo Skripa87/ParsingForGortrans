@@ -18,7 +18,7 @@ namespace ParsingForGortrans
             if (IsEndpoint)
             {
                 var bufferArray = data?.Split('\n') ?? new string[0];
-                if(bufferArray.Length > 1)
+                if(bufferArray.Length > 1 && !string.IsNullOrWhiteSpace(bufferArray[1]))
                 {
                     Time = TimeSpan.TryParse(bufferArray[1], out var result)
                          ? result

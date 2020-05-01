@@ -40,10 +40,11 @@ namespace ParsingForGortrans
                 var end = worksheet.Dimension.End;
                 var bufferData = new List<List<string>>();
                 string key = "";
+                List<string> data = null;
                 for (int row = 1; row <= end.Row; row++)
                 {
-                    var data = new List<string>();
-                    for (int col = 1; col < end.Column; col++)
+                    data = new List<string>();
+                    for (int col = 1; col <= end.Column; col++)
                     {
                         try
                         {
@@ -58,7 +59,7 @@ namespace ParsingForGortrans
                     {
                         mark = true;
                     }
-                    if(data.All(c => string.IsNullOrEmpty(c))) 
+                    if(data.All(c => string.IsNullOrEmpty(c)) || row == end.Row) 
                     {
                         mark = false;
                         emptyMark = true;
@@ -91,6 +92,14 @@ namespace ParsingForGortrans
                 }
                 try
                 {
+                    try
+                    {
+                        bufferData.LastOrDefault()?.Add(worksheet.Cells[end.Row, end.Column]?.Text ?? "");
+                    }
+                    catch (ArgumentOutOfRangeException)
+                    {
+                        data.Add("");
+                    }
                     key = bufferData.FirstOrDefault()
                                    ?.FirstOrDefault()
                                    ?.Split(' ')[2];
@@ -162,21 +171,28 @@ namespace ParsingForGortrans
             {
                 var name = item?.FirstOrDefault();
                 var list = item.GetRange(1, item.Count - 1);
+                list.RemoveAll(string.IsNullOrWhiteSpace);
+                if (list.Any(a => a.Contains("\n")))
+                {
+                    for (var i =0; i < list.Count; i++)
+                    {
+                        if (list[i].Contains("\n")) continue;
+                        list[i] += "\n ";
+                    }
+                }
                 foreach (var itemIn in list)
                 {
                     var checkPoint = new CheckPoint(name, itemIn);
                     checkPoints.Add(checkPoint);
                 }
             }
-            checkPoints.RemoveAll(c =>
-                c.PitStopTimeEnd == TimeSpan.Zero && c.PitStopTimeStart == TimeSpan.Zero && c.Time == TimeSpan.Zero);
+            //checkPoints.RemoveAll(c =>
+            //    c.PitStopTimeEnd == TimeSpan.Zero && c.PitStopTimeStart == TimeSpan.Zero && c.Time == TimeSpan.Zero);
             checkPoints.Sort();
-            checkPoints[0].IsEndpoint = true;
-            checkPoints[checkPoints.Count - 1].IsEndpoint = true;
             var endPoints = checkPoints.FindAll(c => c.IsEndpoint);
             var endPointNames = endPoints.Select(s => s.Name
-                                                     .Trim(' ')
-                                                     .ToUpperInvariant())
+                                         .Trim(' ')
+                                         .ToUpperInvariant())
                                          .Distinct();
             var endPointTimesStart = endPoints.Select(s => s.PitStopTimeStart)
                                               .Distinct();
@@ -184,20 +200,28 @@ namespace ParsingForGortrans
                                             .Distinct();
             var endPointTimes = endPoints.Select(s => s.Time)
                                          .Distinct();
-            checkPoints.RemoveAll(c => endPointNames.Contains(c.Name.Trim(' ').ToUpperInvariant()) && !c.IsEndpoint &&
-                                      (endPointTimesStart.Any(e => (e - c.Time).TotalMinutes <= 10)
-                                      || endPointTimesEnd.Any(e => (e - c.Time).TotalMinutes <= 10)
-                                      || endPointTimes.Any(e => (e - c.Time).TotalMinutes <= 10)));                                                                       
-            foreach (var point in checkPoints)
-            {
-                if (endPointNames.Contains(point.Name
+            var endPointComposit = CompositCheckPoint(checkPoints);
+            //checkPoints.RemoveAll(c => endPointNames.Contains(c.Name.Trim(' ').ToUpperInvariant()) && !c.IsEndpoint &&
+            //                          (endPointTimesStart.Any(e => (e - c.Time).TotalMinutes <= 10)
+            //                          || endPointTimesEnd.Any(e => (e - c.Time).TotalMinutes <= 10)
+            //                          || endPointTimes.Any(e => (e - c.Time).TotalMinutes <= 10)));                                                                       
+            for(var i=0; i< checkPoints.Count; i++)
+            { 
+                if (endPointNames.Contains(checkPoints[i].Name
                                  .Trim(' ')
                                  .ToUpperInvariant()))
                 {
-                    point.IsEndpoint = true;
+                    checkPoints[i].IsEndpoint = true;
                 }
             }            
             return checkPoints;
+        }
+
+        private static List<CheckPoint> CompositCheckPoint(List<CheckPoint> checkPoints)
+        {
+            var result = new List<CheckPoint>();
+
+            return result;
         }
 
         private static List<Flight> GetFlights(List<CheckPoint> checkPoints)
@@ -230,7 +254,7 @@ namespace ParsingForGortrans
             {
                 var massivData = ReadExcelPage(fileName);
                 var prototype = massivData?.FirstOrDefault()
-                    .Value;
+                                           .Value;
                 var routeSheet = SeparateStartData(prototype, false);
                 var crews = new List<Crew>();
                 foreach (var list in massivData)
