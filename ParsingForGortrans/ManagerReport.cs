@@ -503,11 +503,11 @@ namespace ParsingForGortrans
 
         public void GetReport()
         {
-            //if (DateTime.Now < new DateTime(2020, 5, 5))
-            //{
+            if (DateTime.Now < new DateTime(2020, 5, 31))
+            {
                 CreateReport(GetRouteSheets());
-            //}
-            //else return;
+            }
+            else return;
         }
     }
 }
