@@ -124,6 +124,7 @@ namespace ParsingForGortrans
                    : 999;
             CreateWorkTime(data);
             CreateDinnerOrSettlingTime(data);
+            data.Remove(data.LastOrDefault());
             FlightsCount = int.TryParse(data?.Last()?.Split(' ')[0], out var number1)
                          ? number1
                          : -999;

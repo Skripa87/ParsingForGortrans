@@ -9,6 +9,7 @@ using ClosedXML.Excel;
 using DocumentFormat.OpenXml.Bibliography;
 using DocumentFormat.OpenXml.Office2013.Drawing.Chart;
 using System.Windows;
+using DocumentFormat.OpenXml.Office.ActiveX;
 
 namespace ParsingForGortrans
 {
@@ -139,8 +140,14 @@ namespace ParsingForGortrans
             foreach (var item in activeData)
             {
                 var pair = new Pair(item);
-                pair.SetFligths(flights.FindAll(f=>f.CheckPoints.All(c=>(c.Time <= pair.EndWorkTime && c.Time >= pair.StartWorkTime) 
-                                                                     || (c.IsEndpoint && c.PitStopTimeStart <= pair.EndWorkTime && c.PitStopTimeStart >= pair.StartWorkTime))));
+                var pFlights = flights.FindAll(f =>f.CheckPoints
+                                                    .Last()
+                                                    .PitStopTimeStart <= pair.EndWorkTime);
+                pair.SetFligths(pFlights);
+                foreach (var pFlight in pFlights)
+                {
+                    flights.Remove(pFlight);
+                }
                 pairs.Add(pair);
             }
             return pairs;
@@ -187,35 +194,48 @@ namespace ParsingForGortrans
                 }
             }
             checkPoints.Sort();
-            var endPoints = checkPoints.FindAll(c => c.IsEndpoint);
-            var endPointNames = endPoints.Select(s => s.Name
-                                         .Trim(' ')
-                                         .ToUpperInvariant())
-                                         .Distinct();
-            var endPointTimesStart = endPoints.Select(s => s.PitStopTimeStart)
-                                              .Distinct();
-            var endPointTimesEnd = endPoints.Select(s => s.PitStopTimeEnd)
-                                            .Distinct();
-            var endPointTimes = endPoints.Select(s => s.Time)
-                                         .Distinct();
-            var endPointComposit = CompositCheckPoint(checkPoints);
-            for(var i=0; i< checkPoints.Count; i++)
-            { 
-                if (endPointNames.Contains(checkPoints[i].Name
-                                 .Trim(' ')
-                                 .ToUpperInvariant()))
-                {
-                    checkPoints[i].IsEndpoint = true;
-                }
-            }            
+            CompositCheckPoint(checkPoints);
             return checkPoints;
         }
 
         private static List<CheckPoint> CompositCheckPoint(List<CheckPoint> checkPoints)
         {
-            var result = new List<CheckPoint>();
-
-            return result;
+            var endPoints = checkPoints.FindAll(s => s.IsEndpoint);
+            if(!endPoints.Any()) return checkPoints;
+            var endPointNames = endPoints.Select(s => s.Name
+                                                       .Trim(' ')
+                                                       .ToUpperInvariant())
+                                         .Distinct();
+            var activData = checkPoints.FindAll(c => endPointNames.Contains(c.Name
+                                                                             .Trim(' ')
+                                                                             .ToUpperInvariant()));
+            checkPoints.RemoveAll(c => endPointNames.Contains(c.Name
+                                                               .Trim(' ')
+                                                               .ToUpperInvariant()));
+            var index = 0;
+            activData.Sort();
+            var bufferData = new List<CheckPoint> {activData[index]};
+            var endPointsComposit = new List<CheckPoint>();
+            do
+            {
+                index++;
+                if(!string.Equals(activData[index]?.Name
+                                                 .Trim(' ')
+                                                 .ToUpperInvariant(),
+                                 bufferData.LastOrDefault()
+                                           ?.Name
+                                           .Trim(' ')
+                                           .ToUpperInvariant(),new StringComparison())) 
+                {
+                    endPointsComposit.Add(CheckPoint.CreateEndPointFromCheckPointGroup(bufferData));
+                    bufferData = new List<CheckPoint>();
+                }
+                bufferData.Add(activData[index]);
+            } while (index < activData.Count-1);
+            endPointsComposit.Add(CheckPoint.CreateEndPointFromCheckPointGroup(bufferData));
+            checkPoints.AddRange(endPointsComposit);
+            checkPoints.Sort();
+            return checkPoints;
         }
 
         private static List<Flight> GetFlights(List<CheckPoint> checkPoints)
@@ -223,6 +243,7 @@ namespace ParsingForGortrans
             var flights = new List<Flight>();
             var number = 1;
             List<CheckPoint> flightPoints = null;
+            Flight flight = null;
             foreach (var item in checkPoints)
             {
                 if (item.IsEndpoint || flightPoints == null)
@@ -230,14 +251,14 @@ namespace ParsingForGortrans
                     if (flightPoints != null)
                     {
                         flightPoints.Add(item);
-                        var flight = new Flight(number);
+                        flight = new Flight(number);
                         flight.InitCheckPoints(flightPoints);
                         flights.Add(flight);                        
                     }
                     flightPoints = new List<CheckPoint>();
                 }
                 flightPoints.Add(item);
-            }
+            }            
             return flights;
         }
 
@@ -383,7 +404,7 @@ namespace ParsingForGortrans
                                 SetFormat(worksheet.Cell(row, 6), returnTime.ToString().Substring(0, 5));
                                 var minutes = ((flight.CheckPoints
                                                     .LastOrDefault()
-                                                    ?.PitStopTimeEnd ?? TimeSpan.Zero) - (flight.CheckPoints
+                                                    ?.Time ?? TimeSpan.Zero) - (flight.CheckPoints
                                                                                               .LastOrDefault()
                                                                                               ?.PitStopTimeStart
                                                                                           ?? TimeSpan.Zero)).TotalMinutes;
@@ -432,7 +453,7 @@ namespace ParsingForGortrans
                                 SetFormat(worksheet.Cell(row, 6), returnTime.ToString().Substring(0, 5));
                                 var minutes = ((flight.CheckPoints
                                                     .LastOrDefault()
-                                                    ?.PitStopTimeEnd ?? TimeSpan.Zero) - (flight.CheckPoints
+                                                    ?.Time ?? TimeSpan.Zero) - (flight.CheckPoints
                                                                                               .LastOrDefault()
                                                                                               ?.PitStopTimeStart
                                                                                           ?? TimeSpan.Zero)).TotalMinutes;
@@ -482,11 +503,11 @@ namespace ParsingForGortrans
 
         public void GetReport()
         {
-            if (DateTime.Now < new DateTime(2020, 5, 5))
-            {
+            //if (DateTime.Now < new DateTime(2020, 5, 5))
+            //{
                 CreateReport(GetRouteSheets());
-            }
-            else return;
+            //}
+            //else return;
         }
     }
 }
